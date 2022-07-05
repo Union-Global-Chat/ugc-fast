@@ -29,8 +29,9 @@ impl FastProtocol {
         }
     }
     
-    fn connect(&mut self) {
+    fn connect(&mut self) -> PyResult<PyObject> {
         let future = self.loop_.call_method0("create_future");
+        Ok(future)
     }
 }
 
