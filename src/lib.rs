@@ -51,10 +51,10 @@ impl FastProtocol {
         }
     }
     
-    fn connect(&mut self) -> PyResult<PyObject> {
-        let future = self.loop_.call_method0("create_future")?;
+    fn connect(&mut self, py: Python) -> PyResult<PyObject> {
+        let future = self.loop_.call_method0(py, "create_future")?;
         thread::spawn(move || {
-            ws.connect();
+            self.ws.connect();
             let gil = Python::acquire_gil();
             let py = gil.python();
             let set_result = future.getattr(py, "set_result")?;
