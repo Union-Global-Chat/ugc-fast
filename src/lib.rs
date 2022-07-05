@@ -11,9 +11,31 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
     Ok((a + b).to_string())
 }
 
+struct BaseProtocol {
+    ws: Option<WebSocket<TlsStream<TcpStream>>>,
+}
+
+impl BaseProtocol {
+    fn new() Self -> {
+        BaseProtocol {
+            ws: None,
+        }
+    }
+    
+    fn connect(&mut self) {
+        let connector = TlsConnector::new().unwrap();
+        let stream = TcpStream::connect("ugc.renorari.net:443").unwrap();
+        let stream = connector.connect("ugc.renorari.net", stream).unwrap();
+        let wsurl = String::from("wss://ugc.renorari.net/v1/gateway");
+        let (ws, _res) = tungstenite::client::client(&wsurl, stream).unwrap();
+        self.ws = Some(ws);
+        self.closed = false;
+    }
+}
+
 #[pyclass]
 struct FastProtocol {
-    ws: Option<WebSocket<TlsStream<TcpStream>>>,
+    ws: BaseProtocol,
     pub closed: bool,
     loop_: PyObject,
 }
@@ -21,16 +43,23 @@ struct FastProtocol {
 #[pymethods]
 impl FastProtocol {
     #[new]
-    fn new(loop_: PyObject) Self {
+    fn new(loop_: PyObject) -> Self {
         FastProtocol {
-            ws: None,
+            ws: BaseProtocol(),
             closed: true,
             loop_: PyObject,
         }
     }
     
     fn connect(&mut self) -> PyResult<PyObject> {
-        let future = self.loop_.call_method0("create_future");
+        let future = self.loop_.call_method0("create_future")?;
+        thread::spawn(move || {
+            ws.connect();
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let set_result = future.getattr(py, "set_result")?;
+            loop_.call_method1(py, "call_soon_threadsafe", (set_result, py.None()))?;
+        });
         Ok(future)
     }
 }
