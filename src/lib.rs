@@ -16,7 +16,7 @@ struct BaseProtocol {
 }
 
 impl BaseProtocol {
-    fn new() Self -> {
+    fn new() -> Self {
         BaseProtocol {
             ws: None,
         }
