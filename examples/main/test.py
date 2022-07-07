@@ -6,6 +6,6 @@ import asyncio
 async def main():
     loop = asyncio.get_running_loop()
     client = Client(protocol=FastProtocol(loop), loop=loop)
-    await client.connect()
+    await client.connect("aaaaaaa")
 
 asyncio.run(main())
